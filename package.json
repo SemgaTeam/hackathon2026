@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "postgresql": "^0.0.1"
