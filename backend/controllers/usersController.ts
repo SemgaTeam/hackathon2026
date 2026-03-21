@@ -34,7 +34,9 @@ export class UserController {
         try {
             const newUser: User = {
                 id: randomUUID(),
-                role: req.body.role || 'user',
+                username: req.body.username,
+                fullname: req.body.fullname,
+                role: 'user',
                 password: req.body.password,
                 isDeleted: false,
                 createdAt: new Date()
