@@ -6,6 +6,7 @@ class Database {
     private constructor() {}
 
     public static getInstance(): Pool {
+        console.log("DEBUG: Connecting to host:", process.env.DB_HOST); 
         if (!Database.instance) {
             Database.instance = new Pool({
                 host: process.env.DB_HOST,
