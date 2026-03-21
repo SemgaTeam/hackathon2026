@@ -1,7 +1,11 @@
+import { query } from './lib/databaseClient';
+import { UserController } from './controllers/usersController';
 import express from "express";
 import cors from "cors";
-import * as usersController from "./controllers/usersController"
+import { ConcreteUserRepository } from './repository/users';
 
+const userRepository = new ConcreteUserRepository(query);
+const usersController = new UserController(userRepository);
 
 const app = express();
 
