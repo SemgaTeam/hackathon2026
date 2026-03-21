@@ -3,18 +3,11 @@ import session from "express-session";
 import { hashedPassword } from "./bcrypt";
 import "dotenv/config";
 import bcrypt from "bcrypt";
+
 const app = express();
 
-// declare module "express-session" {
-//   interface SessionData {
-//     user?: {
-//       id: number;
-//       username: string;
-//     };
-//   }
-// }
-
 app.use(express.json());
+
 app.use(
   session({
     name: "connect.sid",
@@ -47,6 +40,7 @@ const insertSession = async (sid: string) => {
   const resultSession = await client.query(querySession, valuseSession);
   return resultSession;
 };
+
 app.post("/registr", async (req: Request, res: Response) => {
   try {
     const { username, password, fullname } = req.body;
