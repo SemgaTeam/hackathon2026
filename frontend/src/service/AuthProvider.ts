@@ -44,16 +44,22 @@ export const authProvider: AuthProvider = {
     },
 
     getIdentity: async () => {
-        const resp = await fetch(`${apiUrl}/me`, {
-            credentials: "include"
-        });
+        try {
+            const resp = await fetch(`${apiUrl}/me`, {
+                credentials: "include"
+            });
 
-        const data = await resp.json();
+            if (!resp.ok) return { id: '', fullName: '' };
 
-        return {
-            id: data.id,
-            name: data.name
-        };
+            const data = await resp.json();
+            return {
+                id: data.id,
+                fullName: data.fullname || data.username,
+                avatar: data.avatar 
+            };
+        } catch (e) {
+            return { id: '', fullName: '' };
+        }
     },
 
     getPermissions: async () => {

@@ -2,7 +2,6 @@ import { User, UserRepository } from './../repository/users';
 import { Request, Response } from 'express';
 import { UUID, randomUUID } from "node:crypto";
 
-
 export class UserController {
     private readonly userRepository: UserRepository;
     
@@ -10,18 +9,23 @@ export class UserController {
         this.userRepository = userRepository;
     }
 
-    public async getAllUsers(req:Request, res: Response) {
+    public getAllUsers = async (req: Request, res: Response) => {
         try {
             const users = await this.userRepository.getAll();
+            
             res.setHeader('X-Total-Count', users.length.toString()); 
             res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
             res.json(users);
-        } catch (error) {
-            res.status(500).json({ error: "Internal Server Error" });
+        } catch (error: any) {
+            console.error("!!! DETAILED ERROR !!!");
+            console.error("Message:", error.message);
+            console.error("Code:", error.code);
+            console.error("Stack:", error.stack);
+            res.status(500).json({ error: "Internal Server Error", details: error.message });            
         }
     }
 
-    public async getUserById(req: Request, res: Response) {
+    public getUserById = async (req: Request, res: Response) => {
         try {
             const user = await this.userRepository.getById(req.params.id as UUID);
             res.json(user);
@@ -30,7 +34,7 @@ export class UserController {
         }
     }
 
-    public async createUser(req: Request, res: Response) {
+    public createUser = async (req: Request, res: Response) => {
         try {
             const newUser: User = {
                 id: randomUUID(),
@@ -48,7 +52,7 @@ export class UserController {
         }
     }
 
-    public async  updateUser(req: Request, res: Response) {
+    public updateUser = async (req: Request, res: Response) => {
         try {
             const user = {
                 id: req.params.id as UUID,
@@ -61,7 +65,7 @@ export class UserController {
         }   
     }
 
-    public async deleteUser(req: Request, res: Response) {
+    public deleteUser = async (req: Request, res: Response) => {
         try {
             await this.userRepository.deleteById(req.params.id as UUID);
             res.status(204).send();

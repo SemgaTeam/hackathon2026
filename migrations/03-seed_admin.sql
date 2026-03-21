@@ -14,7 +14,7 @@ VALUES (
     'admin', 
     'System Administrator', 
     'admin', 
-    'FTie0G4NOYkEC73IWEUkguJgk/VvAeh2mhu1TZeRjQoLLi6gwHqfa', 
+    '$2b$10$IJIpucmZ/gXX2Dhj0iUO9.J70PJrCTkGsvMYz6CIqNJT7S3lRA6.e', 
     false, 
     CURRENT_TIMESTAMP
 )

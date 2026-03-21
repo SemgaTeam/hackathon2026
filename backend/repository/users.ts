@@ -27,7 +27,7 @@ export interface UserRepository {
     getByUsername(username: string): Promise<User | null>;
     exists(username: string): Promise<boolean>;
 
-    saveSession(sid: string): Promise<void>;
+    saveSession(sid: string, data: any): Promise<void>;
     checkSession(sid: string): Promise<boolean>;
     deleteSession(sid: string): Promise<void>;
 }
@@ -41,7 +41,16 @@ export class ConcreteUserRepository implements UserRepository {
 
     async getByUsername(username: string): Promise<User | null> {
         const { rows } = await this.query<User>(
-            "SELECT * FROM users WHERE username = $1 AND is_deleted = false",
+            `SELECT 
+                id, 
+                role, 
+                username, 
+                fullname, 
+                password,
+                is_deleted AS "isDeleted", 
+                created_at AS "createdAt" 
+            FROM users 
+            WHERE username = $1 AND is_deleted = false`,
             [username]
         );
         return rows[0] || null;
@@ -57,7 +66,15 @@ export class ConcreteUserRepository implements UserRepository {
 
     async getById(id: UUID): Promise<User> {
         const { rows } = await this.query<User>(
-            "SELECT id, role, username, fullname, is_deleted, created_at FROM users WHERE id = $1",
+            `SELECT 
+                id, 
+                role, 
+                username, 
+                fullname, 
+                is_deleted AS "isDeleted", 
+                created_at AS "createdAt" 
+            FROM users 
+            WHERE id = $1`,
             [id]
         );
         if (rows.length === 0) throw new Error("User not found");
@@ -65,12 +82,25 @@ export class ConcreteUserRepository implements UserRepository {
     }
 
     async getAll(): Promise<User[]> {
-        const { rows } = await this.query<User>(
-            "SELECT id, role, username, fullname, created_at FROM users WHERE is_deleted = false"
-        );
-        return rows;
+        try {
+            const { rows } = await this.query<User>(
+                `SELECT 
+                    id, 
+                    role, 
+                    username, 
+                    fullname, 
+                    is_deleted AS "isDeleted", 
+                    created_at AS "createdAt" 
+                FROM users 
+                WHERE is_deleted = false
+                ORDER BY created_at DESC` // Сортируем по умолчанию
+            );
+            return rows;
+        } catch (error) {
+            console.error("DATABASE_ERROR_GET_ALL:", error);
+            throw error;
+        }
     }
-
 
     async create(user: User): Promise<void> {
         const sql = `
@@ -78,8 +108,13 @@ export class ConcreteUserRepository implements UserRepository {
             VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
         await this.query(sql, [
-            user.id, user.role, user.password, user.username, 
-            user.fullname, user.isDeleted, user.createdAt
+            user.id, 
+            user.role, 
+            user.password, 
+            user.username, 
+            user.fullname, 
+            user.isDeleted, 
+            user.createdAt
         ]);
     }
 
@@ -101,18 +136,25 @@ export class ConcreteUserRepository implements UserRepository {
         if (rowCount === 0) throw new Error("Delete failed: User not found");
     }
 
-
-    async saveSession(sid: string): Promise<void> {
-        const sql = `INSERT INTO sessions (sid) VALUES ($1) ON CONFLICT (sid) DO NOTHING`;
-        await this.query(sql, [sid]);
+    async saveSession(sid: string, data: any): Promise<void> {
+        const sql = `
+            INSERT INTO "session" (sid, sess, expire) 
+            VALUES ($1, $2, $3) 
+            ON CONFLICT (sid) DO UPDATE SET sess = $2, expire = $3
+        `;
+        const expireDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // +24 часа
+        await this.query(sql, [sid, JSON.stringify(data), expireDate]);
     }
 
     async checkSession(sid: string): Promise<boolean> {
-        const { rows } = await this.query("SELECT 1 FROM sessions WHERE sid = $1", [sid]);
+        const { rows } = await this.query(
+            'SELECT 1 FROM "session" WHERE sid = $1 AND expire > NOW()', 
+            [sid]
+        );
         return rows.length > 0;
     }
 
     async deleteSession(sid: string): Promise<void> {
-        await this.query("DELETE FROM sessions WHERE sid = $1", [sid]);
+        await this.query('DELETE FROM "session" WHERE sid = $1', [sid]);
     }
 }

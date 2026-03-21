@@ -19,12 +19,11 @@ export class AuthController {
       req.session.user = { 
         id: user.id.toString(), 
         role: user.role 
-      }; 
+      };
 
       console.log(req.session.user);
       
-      await this.userRepository.saveSession(req.sessionID);
-
+      await this.userRepository.saveSession(req.sessionID, req.session);
       res.status(200).json({ 
         message: "Вы авторизовались", 
         user: { id: user.id, role: user.role, fullname: user.fullname } 
@@ -62,7 +61,7 @@ export class AuthController {
         id: userId.toString(), 
         role: newUser.role 
       };
-      await this.userRepository.saveSession(req.sessionID);
+      await this.userRepository.saveSession(req.sessionID, req.session);
       
       res.status(201).json({ message: "Пользователь зарегистрирован" });
     } catch (error) {

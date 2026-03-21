@@ -38,7 +38,7 @@ app.use(session({
     cookie: {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: parseInt(process.env.SESSION_AT || "86400000"),
     },
 }));
