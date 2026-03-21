@@ -18,9 +18,8 @@ class Database {
                 idleTimeoutMillis: 30000,
             });
 
-            Database.instance.on("error", (err) => {
+            Database.instance.on("error", (err: any) => {
                 console.error("Unexpected error on client", err);
-                process.exit(1);
             });
         }
         return Database.instance;

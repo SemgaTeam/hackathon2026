@@ -47,15 +47,12 @@ export class ConcreteUserRepository {
             "SELECT * FROM users"
         );
 
-        if (rows.length === 0)
-            throw Error("There is not users at all!");
-
         return rows;
     }
 
 async create(user: User): Promise<void> {
         const sql = `
-            INSERT INTO users (id, role, password, is_deleted, create_ad)
+            INSERT INTO users (id, role, password, is_deleted, created_at)
             VALUES ($1, $2, $3, $4, $5)
         `;
         await this.query(sql, [
