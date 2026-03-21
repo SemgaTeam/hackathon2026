@@ -8,6 +8,9 @@ import { ConcreteUserRepository } from './repository/users';
 import { UserController } from './controllers/usersController';
 import { AuthController } from './controllers/authController';
 import { checkAuth, checkRole } from "./middleware/authMiddleware";
+import { InMemoryQueueRepository } from "./repository/queue";
+import { PlaylistRepository } from "./repository/playlists";
+import { Service } from "./service/service";
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -15,6 +18,10 @@ const PORT = process.env.PORT || 8081;
 const userRepository = new ConcreteUserRepository(query);
 const userController = new UserController(userRepository);
 const authController = new AuthController(userRepository);
+
+const queueRepository = new InMemoryQueueRepository();
+const playlistRepository = new PlaylistRepository(query);
+const service = new Service(queueRepository, playlistRepository);
 
 app.use(express.json());
 app.use(cors({
