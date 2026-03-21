@@ -15,7 +15,7 @@ export interface MediaLib {
 export interface PlaylistItem {
     playlist_id: UUID;
     item_id: UUID;
-    number: number;
+    position: number;
 }
 
 export interface PlaylistInterface {
@@ -45,8 +45,8 @@ export class PlaylistRepository implements PlaylistInterface {
 
     async savePlaylist(playlist: Playlist): Promise<void> {
         const sql = `
-            INSERT INTO playlists (id, name)
-            VALUES ($1, $2)
+            INSERT INTO playlists (id, name, items)
+            VALUES ($1, $2, $3)
         `;
         await this.query(sql, [playlist.id, playlist.name]);
     }
@@ -57,6 +57,16 @@ export class PlaylistRepository implements PlaylistInterface {
             VALUES ($1, $2)
         `;
         await this.query(sql, [lib.id, lib.user_id]);
+    }
+    
+    async addItemToEnd(playlistId: UUID, itemId: UUID): Promise<void> { // works for playlists and medialibs
+        const sql = `
+            INSERT INTO playlist_items (playlist_id, media_item_id, position)
+            SELECT $1, $2, COALESCE(MAX(position), 0) + 1
+            FROM playlist_items
+            WHERE playlist_id = $1;
+        `;
+        await this.query(sql, [playlistId, itemId])
     }
 
     async getPlaylistByID(id: UUID): Promise<Playlist> {
@@ -118,7 +128,7 @@ export class PlaylistRepository implements PlaylistInterface {
             FROM media_items mi
             JOIN playlist_items pi ON pi.item_id = mi.id
             WHERE pi.playlist_id = $1
-            ORDER BY pi.number ASC
+            ORDER BY pi.position ASC
             `,
             [id]
         );
@@ -133,7 +143,7 @@ export class PlaylistRepository implements PlaylistInterface {
             FROM media_items mi
             JOIN playlist_items pi ON pi.item_id = mi.id
             WHERE pi.playlist_id = $1
-            ORDER BY pi.number ASC
+            ORDER BY pi.position ASC
             `,
             [id]
         );
