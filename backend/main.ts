@@ -25,7 +25,7 @@ const service = new Service(queueRepository, playlistRepository);
 
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5174',
+    origin: 'http://localhost:5173',
     credentials: true,
     exposedHeaders: ['X-Total-Count']
 }));
