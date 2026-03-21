@@ -4,7 +4,7 @@ import { dataProvider } from "./service/DataProvider";
 import { authProvider } from "./service/AuthProvider";
 
 export default function App() {
-    return
+    return ( 
      <Admin dataProvider={dataProvider}
             authProvider={authProvider}>
                 <Resource name="users"
@@ -14,4 +14,5 @@ export default function App() {
                 />
 
     </Admin>
+    );
 }
