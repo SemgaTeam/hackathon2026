@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.13.6",
     "ra-data-json-server": "^5.14.4",
     "react": "^19.2.4",
     "react-admin": "^5.14.4",
