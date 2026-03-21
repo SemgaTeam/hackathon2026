@@ -68,7 +68,7 @@ app.get("/authme", async (req, res) => {
     const values = [req.session.sid];
     result = await Client.query(query, values);
     const { sid } = req.session.sid;
-    if (result == sid) {
+    if (result.rows[0] == sid) {
       res.status(200).send("Авторизован");
     }
   } catch (error) {
