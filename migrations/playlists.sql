@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS playlist_items(
     media_item_id UUID NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
     position INTEGER NOT NULL,
 
-    PRIMARY KEY (playlist_id, position),
-    UNIQUE (playlist_id, song_id)
+    PRIMARY KEY (playlist_id, position)
+    DEFERRABLE INITIALLY IMMEDIATE,
+    UNIQUE (playlist_id, media_item_id)
 );
 
 CREATE INDEX idx_playlist_items_playlist
