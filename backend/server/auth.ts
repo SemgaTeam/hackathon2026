@@ -32,8 +32,8 @@ declare module "express-session" {
   }
 }
 
-const insertSession = async (sid: string) => {
-  const querySession = `INSERT INTO session (sid,)
+export const insertSession = async (sid: string) => {
+  const querySession = `INSERT INTO session (sid)
     SELECT $1
     RETURNING *;`;
   const valuseSession = [sid];
@@ -43,15 +43,15 @@ const insertSession = async (sid: string) => {
 
 app.post("/registr", async (req: Request, res: Response) => {
   try {
-    const { username, password, fullname } = req.body;
+    const { username, password, fullname, role } = req.body;
     const sid = req.sessionID;
     console.log(sid);
     const pass = await hashedPassword(password);
     const query = `
-  INSERT INTO users (username, password, fullname)
+  INSERT INTO users (username, password, fullname, role)
   VALUES ($1, $2, $3)
   RETURNING *;`;
-    const values = [username, pass, fullname];
+    const values = [username, pass, fullname, role];
     const result = await client.query(query, values);
     await insertSession(sid);
     const User = result.rows[0];
