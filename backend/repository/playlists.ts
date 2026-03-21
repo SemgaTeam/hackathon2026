@@ -26,16 +26,21 @@ export interface PlaylistInterface {
     getMedialibByID(id: UUID): Promise<MediaLib>;
     getPlaylistByName(name: string): Promise<Playlist>;
     getMedialibByUserID(id: UUID): Promise<MediaLib>;
+    getMediaItemByID(id: UUID): Promise<MediaItem>;
 
     getPlaylistItems(id: UUID): Promise<MediaItem[]>;
     getMedialibItems(id: UUID): Promise<MediaItem[]>;
 
+    removeFromPlaylist(playlistId: UUID, itemId: UUID): Promise<MediaItem | null>;
+
     moveItemBefore(
         playlistId: UUID, 
-        itemPosition: number, 
-        beforePosition: number
+        itemIndex: number, 
+        beforeIndex: number
     ): Promise<void>;
     normalizePositions(playlistId: UUID): Promise<void>;
+
+    addToEnd(playlistId: UUID, itemId: UUID): Promise<void>;
 }
 
 type QueryFunction = <T extends QueryResultRow = any>(
@@ -53,21 +58,49 @@ export class PlaylistRepository implements PlaylistInterface {
 
     async savePlaylist(playlist: Playlist): Promise<void> {
         const sql = `
-            INSERT INTO playlists (id, name, items)
-            VALUES ($1, $2, $3)
+            INSERT INTO playlists (name)
+            VALUES ($1)
+            RETURNING id
         `;
-        await this.query(sql, [playlist.id, playlist.name]);
+
+        const { rows } = await this.query<{id: UUID}>(sql, [playlist.name]);
+        if (rows.length != 1) {
+            throw new Error("error creating playlist");
+        }
+
+        playlist.id = rows[0].id; 
     }
 
     async saveMedialib(lib: MediaLib): Promise<void> {
         const sql = `
-            INSERT INTO medialibs (id, user_id)
-            VALUES ($1, $2)
+            INSERT INTO medialibs (user_id)
+            VALUES ($1)
         `;
-        await this.query(sql, [lib.id, lib.user_id]);
+        await this.query(sql, [lib.user_id]);
+
+        const { rows } = await this.query<{id: UUID}>(sql, [lib.user_id]);
+        if (rows.length != 1) {
+            throw new Error("error creating medialib");
+        }
+
+        lib.id = rows[0].id; 
+    }
+
+    async removeFromPlaylist(playlistId: UUID, itemId: UUID): Promise<MediaItem | null> {
+        const sql = `
+            DELETE FROM playlist_items
+            WHERE playlist_id = $1, media_item_id = $2
+            RETURNING *
+        `;
+        const { rows } = await this.query<MediaItem>(sql, [playlistId, itemId])
+        if (rows.length === 0) {
+            return null;
+        }
+
+        return rows[0];
     }
     
-    async addItemToEnd(playlistId: UUID, itemId: UUID): Promise<void> { // works for playlists and medialibs
+    async addToEnd(playlistId: UUID, itemId: UUID): Promise<void> { // works for playlists and medialibs
         const sql = `
             INSERT INTO playlist_items (playlist_id, media_item_id, position)
             SELECT $1, $2, COALESCE(MAX(position), 0) + 1000
@@ -79,10 +112,10 @@ export class PlaylistRepository implements PlaylistInterface {
 
     async moveItemBefore(
         playlistId: UUID, 
-        itemPosition: number, 
-        beforePosition: number
+        itemIndex: number, 
+        beforeIndex: number
     ): Promise<void> {
-        if (itemPosition === beforePosition) {
+        if (itemIndex === beforeIndex) {
             return;
         }
 
@@ -100,15 +133,8 @@ export class PlaylistRepository implements PlaylistInterface {
             throw new Error("Playlist is empty");
         }
 
-        const itemIndex = rows.findIndex(r => r.position === itemPosition);
-        const beforeIndex = rows.findIndex(r => r.position === beforePosition);
-
-        if (itemIndex === -1) {
-            throw new Error("Item position not found");
-        }
-        if (beforeIndex === -1) {
-            throw new Error("Before position not found");
-        }
+        const itemPosition = rows[itemIndex].position;
+        const beforePosition = rows[beforeIndex].position;
 
         const moving = rows[itemIndex];
         const rowsWithoutMoving = rows.filter(r => r.position !== itemPosition);
@@ -261,5 +287,19 @@ export class PlaylistRepository implements PlaylistInterface {
         );
 
         return rows;
+    }
+
+    async getMediaItemByID(id: UUID): Promise<MediaItem> {
+        const sql = `
+            SELECT * FROM media_items
+            WHERE id = $1 
+        `;
+        const { rows } = await this.query<MediaItem>(sql, [id]);
+        
+        if (rows.length === 0) {
+            throw new Error("media item not found");
+        }
+
+        return rows[0];
     }
 }
