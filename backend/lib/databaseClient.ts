@@ -1,5 +1,4 @@
-import { Pool, QueryResult, QueryResultRow } from "pg";
-
+import { QueryResult, QueryResultRow, Pool, Query } from "pg";
 
 class Database {
     private static instance: Pool;
