@@ -11,7 +11,7 @@ app.use(express.json());
 //app.use(cookieParser(process.env.SECRET));
 app.use(
   session({
-    name: "connect.sid",
+    username: "connect.sid",
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
@@ -32,14 +32,15 @@ const hashedPassword = async (password) => {
 
 app.post("/registr", async (req, res) => {
   try {
-    const { name, password } = req.body;
+    const { username, password } = req.body;
+    const { sid } = res.session.sid;
     const pass = hashedPassword(password);
     const query =
-      "INSERT INTO users (name, password) VALUES = ($1, $2) RETURNING *";
-    const values = [name, pass];
+      "WITH new_user AS(INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *) INSERT INTO session (sid) VALUES ($3) RETURNING *";
+    const values = [username, pass, sid];
     const result = await Client.query(query, values);
     const User = result.rows[0];
-    res.session.user = { id: User.id, name: User.name };
+    res.session.user = { id: User.id, username: User.username };
     res.status(201).send("User registr!");
   } catch (error) {
     res.status(401).json({ error });
@@ -47,16 +48,16 @@ app.post("/registr", async (req, res) => {
 });
 app.post("/login", async (req, res) => {
   try {
-    const { name, password } = req.body;
-    const query = "SELECT * FROM users WHERE name = $1";
-    const values = [name];
+    const { username, password } = req.body;
+    const query = "SELECT * FROM users WHERE username = $1";
+    const values = [username];
     const result = await Client.query(query, values);
     const User = result.rows[0];
     const isValid = await bcrypt.compare(password, User.password);
     if (!isValid) {
       res.status(401).send("Неверный пароль");
     }
-    res.session.user = { id: User.id, name: User.name };
+    res.session.user = { id: User.id, username: User.username };
     res.status(201).send("Вы авторизовались");
   } catch (error) {
     res.status(401).json({ error });
@@ -74,5 +75,11 @@ app.get("/authme", async (req, res) => {
   } catch (error) {
     res.status(401).send("Не авторизован");
   }
+});
+app.post("/logout", async (req, res) => {
+  res.session.destroy(() => {
+    res.clearCookie("connect.sid");
+    res.json("Вы вышли из аккаунта");
+  });
 });
 app.listen(8000, console.log("http://localhost:8000"));
