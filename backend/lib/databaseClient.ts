@@ -1,5 +1,5 @@
-import { QueryResult, QueryResultRow } from './../../frontend/node_modules/@types/pg/index.d';
-import { Pool, Query } from "pg";
+import { Pool, QueryResult, QueryResultRow } from "pg";
+
 
 class Database {
     private static instance: Pool;
