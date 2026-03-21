@@ -9,9 +9,28 @@ import AdminMenu from "./components/AdminMenu";
 import PlayerMenu from "./components/PlayerMenu";
 import HostMenu from "./components/HostMenu";
 import AuthForm from "./components/AuthForm";
+import { useEffect, useState } from "react";
+import { authProvider } from "./service/AuthProvider";
 
 export default function App() {
-  const user = null;
+  const [user, setUser] = useState<{ id: string; role: string; fullname?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await authProvider.checkAuth({});
+        const identity = await authProvider.getIdentity();
+        const role = await authProvider.getPermissions({});
+        setUser({ ...identity, role });
+      } catch (e) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initAuth();
+  }, []);
 
   const navLinkClass = ({ isActive }) =>
     `px-6 h-full flex items-center border-b-4 font-bold text-[11px] uppercase tracking-widest transition-all ${
