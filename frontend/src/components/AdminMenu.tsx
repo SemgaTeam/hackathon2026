@@ -51,6 +51,7 @@ export default function AdminMenu() {
                 dataProvider={dataProvider}
                 authProvider={authProvider}
                 disableTelemetry
+                requireAuthg
             >
                 <Resource
                     name="users"
