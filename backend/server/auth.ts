@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import session from "express-session";
 import { hashedPassword } from "./bcrypt";
 import "dotenv/config";
-
+import bcrypt from "bcrypt";
 const app = express();
 
 // declare module "express-session" {
@@ -35,7 +35,6 @@ declare module "express-session" {
   interface SessionData {
     user?: {
       id: number;
-      username: string;
     };
   }
 }
@@ -50,19 +49,19 @@ const insertSession = async (sid: string) => {
 };
 app.post("/registr", async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, fullname } = req.body;
     const sid = req.sessionID;
     console.log(sid);
     const pass = await hashedPassword(password);
     const query = `
-  INSERT INTO users (username, password)
-  VALUES ($1, $2)
+  INSERT INTO users (username, password, fullname)
+  VALUES ($1, $2, $3)
   RETURNING *;`;
-    const values = [username, pass];
+    const values = [username, pass, fullname];
     const result = await client.query(query, values);
     await insertSession(sid);
     const User = result.rows[0];
-    req.session.user = { id: User.id, username: User.username };
+    req.session.user = { id: User.id };
     res.status(201).send("User registr!");
   } catch (error) {
     res
@@ -82,12 +81,15 @@ app.post("/login", async (req: Request, res: Response) => {
     if (!isValid) {
       res.status(401).send("Неверный пароль");
     }
-    req.session.user = { id: User.id, username: User.username };
+    req.session.user = { id: User.id };
     const sid = req.sessionID;
     await insertSession(sid);
     res.status(201).send("Вы авторизовались");
   } catch (error) {
-    res.status(401).json({ error });
+    res
+      .status(401)
+      .json(error as Error)
+      .toString();
   }
 });
 app.post("/authme", async (req: Request, res: Response) => {
@@ -96,7 +98,7 @@ app.post("/authme", async (req: Request, res: Response) => {
     const sid = req.sessionID;
     const values = [sid];
     const result = await client.query(query, values);
-    if (result.rows[0] == sid) {
+    if (result.rows[0] > 0) {
       res.status(200).send("Авторизован");
     }
   } catch (error) {
