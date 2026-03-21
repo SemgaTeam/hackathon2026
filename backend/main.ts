@@ -1,11 +1,19 @@
-import { query } from './lib/databaseClient';
-import { UserController } from './controllers/usersController';
+import { query } from "./lib/databaseClient";
+import { UserController } from "./controllers/usersController";
 import express from "express";
 import cors from "cors";
-import { ConcreteUserRepository } from './repository/users';
+import { ConcreteUserRepository } from "./repository/users";
+import { Service } from "./service/service";
+import { InMemoryQueueRepository } from "./repository/queue";
+import { PlaylistRepository } from "./repository/playlists";
 
 const userRepository = new ConcreteUserRepository(query);
 const usersController = new UserController(userRepository);
+
+const queueRepository = new InMemoryQueueRepository();
+const playlistRepository = new PlaylistRepository(query);
+
+const service = new Service(queueRepository, playlistRepository);
 
 const app = express();
 
