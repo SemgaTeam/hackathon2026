@@ -25,7 +25,9 @@
   "directories": {
     "lib": "lib"
   },
-  "scripts": {},
+"scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only main.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -1,4 +1,4 @@
-import { UUID } from "node:crypto"
+import { UUID } from "node:crypto";
 import { QueryResult, QueryResultRow } from "pg";
 
 type QueryFunction = <T extends QueryResultRow = any>(
@@ -8,8 +8,10 @@ type QueryFunction = <T extends QueryResultRow = any>(
 
 export interface User {
     id: UUID;
+    username: string;
+    fullname: string;
     role: string;
-    password: string;
+    password?: string;
     isDeleted: boolean;
     createdAt: Date;
 }
@@ -20,77 +22,96 @@ export interface UserRepository {
     create(user: User): Promise<void>;
     update(user: User): Promise<void>;
     deleteById(id: UUID): Promise<void>;
+
+    getByUsername(username: string): Promise<User | null>;
+    exists(username: string): Promise<boolean>;
+
+    saveSession(sid: string): Promise<void>;
+    checkSession(sid: string): Promise<boolean>;
+    deleteSession(sid: string): Promise<void>;
 }
 
-export class ConcreteUserRepository {
+export class ConcreteUserRepository implements UserRepository {
     private readonly query: QueryFunction;
 
     constructor(query: QueryFunction) {
         this.query = query;
     }
 
+    async getByUsername(username: string): Promise<User | null> {
+        const { rows } = await this.query<User>(
+            "SELECT * FROM users WHERE username = $1 AND is_deleted = false",
+            [username]
+        );
+        return rows[0] || null;
+    }
+
+    async exists(username: string): Promise<boolean> {
+        const { rows } = await this.query(
+            "SELECT 1 FROM users WHERE username = $1 LIMIT 1",
+            [username]
+        );
+        return rows.length > 0;
+    }
+
     async getById(id: UUID): Promise<User> {
         const { rows } = await this.query<User>(
-            "SELECT * FROM users WHERE id = $1",
+            "SELECT id, role, username, fullname, is_deleted, created_at FROM users WHERE id = $1",
             [id]
         );
-
-        if (rows.length === 0) {
-            throw new Error("User not found");
-        }
-
+        if (rows.length === 0) throw new Error("User not found");
         return rows[0];
     }
 
     async getAll(): Promise<User[]> {
         const { rows } = await this.query<User>(
-            "SELECT * FROM users"
+            "SELECT id, role, username, fullname, created_at FROM users WHERE is_deleted = false"
         );
-
-        if (rows.length === 0)
-            throw Error("There is not users at all!");
-
         return rows;
     }
 
-async create(user: User): Promise<void> {
+
+    async create(user: User): Promise<void> {
         const sql = `
-            INSERT INTO users (id, role, password, is_deleted, create_ad)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO users (id, role, password, username, fullname, is_deleted, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
         await this.query(sql, [
-            user.id, 
-            user.role, 
-            user.password, 
-            user.isDeleted, 
-            user.createdAt
+            user.id, user.role, user.password, user.username, 
+            user.fullname, user.isDeleted, user.createdAt
         ]);
     }
 
     async update(user: User): Promise<void> {
         const sql = `
             UPDATE users 
-            SET role = $2, password = $3, is_deleted = $4 
+            SET role = $2, fullname = $3, is_deleted = $4 
             WHERE id = $1
         `;
         const { rowCount } = await this.query(sql, [
-            user.id, 
-            user.role, 
-            user.password, 
-            user.isDeleted
+            user.id, user.role, user.fullname, user.isDeleted
         ]);
-
-        if (rowCount === 0) {
-            throw new Error("Update failed: User not found");
-        }
+        if (rowCount === 0) throw new Error("Update failed: User not found");
     }
 
     async deleteById(id: UUID): Promise<void> {
         const sql = `UPDATE users SET is_deleted = true WHERE id = $1`;
         const { rowCount } = await this.query(sql, [id]);
+        if (rowCount === 0) throw new Error("Delete failed: User not found");
+    }
 
-        if (rowCount === 0) {
-            throw new Error("Delete failed: User not found");
-        }
+
+    async saveSession(sid: string): Promise<void> {
+        const sql = `INSERT INTO sessions (sid) VALUES ($1) ON CONFLICT (sid) DO NOTHING`;
+        await this.query(sql, [sid]);
+    }
+
+    async checkSession(sid: string): Promise<boolean> {
+        const { rows } = await this.query("SELECT 1 FROM sessions WHERE sid = $1", [sid]);
+        return rows.length > 0;
+    }
+
+    async deleteSession(sid: string): Promise<void> {
+        await this.query("DELETE FROM sessions WHERE sid = $1", [sid]);
     }
 }

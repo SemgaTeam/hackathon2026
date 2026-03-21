@@ -1,79 +1,100 @@
-import express, { Request, Response } from "express";
-import session from "express-session";
-import { hashedPassword } from "./bcrypt";
-import "dotenv/config";
+import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { insertSession } from "../server/auth";
+import { randomUUID, UUID } from "node:crypto";
+import { UserRepository, User } from "../repository/users";
 
-export class UserController {
-  private readonly userRepository: UserRepository;
+export class AuthController {
+  constructor(private readonly userRepository: UserRepository) {}
 
-  constructor(userRepository: UserRepository) {
-    this.userRepository = userRepository;
-  }
-
-  public async login(req: Request, res: Response) {
+  public login = async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
-      const query = "SELECT * FROM users WHERE username = $1;";
-      const values = [username];
-      const result = await client.query(query, values);
-      const User = result.rows[0];
-      const isValid = await bcrypt.compare(password, User.password);
-      if (!isValid) {
-        res.status(401).send("Неверный пароль");
+      const user = await this.userRepository.getByUsername(username);
+
+      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ error: "Неверный логин или пароль" });
       }
-      req.session.user = { id: User.id };
-      const sid = req.sessionID;
-      await insertSession(sid);
-      res.status(201).send("Вы авторизовались");
+
+      req.session.user = { 
+        id: user.id.toString(), 
+        role: user.role 
+      }; 
+      
+      await this.userRepository.saveSession(req.sessionID);
+
+      res.status(200).json({ 
+        message: "Вы авторизовались", 
+        user: { id: user.id, role: user.role, fullname: user.fullname } 
+      });
     } catch (error) {
-      res
-        .status(401)
-        .json(error as Error)
-        .toString();
+      res.status(500).json({ error: "Ошибка при входе" });
     }
-  }
-  public async registr(req: Request, res: Response) {
+  };
+
+  public register = async (req: Request, res: Response) => {
     try {
       const { username, password, fullname, role } = req.body;
-      const sid = req.sessionID;
-      console.log(sid);
-      const pass = await hashedPassword(password);
-      const query = `
-            INSERT INTO users (username, password, fullname, role)
-            VALUES ($1, $2, $3)
-            RETURNING *;`;
-      const values = [username, pass, fullname, role];
-      const result = await client.query(query, values);
-      await insertSession(sid);
-      const User = result.rows[0];
-      req.session.user = { id: User.id };
-      res.status(201).send("User registr!");
-    } catch (error) {
-      res
-        .status(401)
-        .json(error as Error)
-        .toString();
-    }
-  }
-  public async authme(req: Request, res: Response) {
-    try {
-      const query = "SELECT * FROM sessions WHERE sid = $1;";
-      const sid = req.sessionID;
-      const values = [sid];
-      const result = await client.query(query, values);
-      if (result.rows[0] > 0) {
-        res.status(200).send("Авторизован");
+
+      if (await this.userRepository.exists(username)) {
+        return res.status(400).json({ error: "Пользователь уже существует" });
       }
+
+      const hash = await bcrypt.hash(password, 10);
+      const userId = randomUUID() as UUID;
+      
+      const newUser: User = {
+        id: userId,
+        username,
+        fullname,
+        role: role || 'user',
+        password: hash,
+        isDeleted: false,
+        createdAt: new Date()
+      };
+
+      await this.userRepository.create(newUser);
+      
+      req.session.user = { 
+        id: userId.toString(), 
+        role: newUser.role 
+      };
+      await this.userRepository.saveSession(req.sessionID);
+      
+      res.status(201).json({ message: "Пользователь зарегистрирован" });
     } catch (error) {
-      res.status(401).send("Не авторизован");
+      res.status(500).json({ error: "Ошибка регистрации" });
     }
-  }
-  public async logout(req: Request, res: Response) {
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.status(200).json("Вы вышли из аккаунта");
-    });
-  }
+  };
+
+  public me = async (req: Request, res: Response) => {
+    try {
+      const isAuth = await this.userRepository.checkSession(req.sessionID);
+      
+      if (isAuth && req.session.user) {
+        const user = await this.userRepository.getById(req.session.user.id as UUID);
+        
+        const { password, ...safeUser } = user;
+        return res.status(200).json(safeUser);
+      }
+      
+      res.status(401).json({ error: "Не авторизован" });
+    } catch (error) {
+      res.status(401).json({ error: "Сессия не найдена или истекла" });
+    }
+  };
+
+  public logout = async (req: Request, res: Response) => {
+    const sid = req.sessionID;
+    try {
+      await this.userRepository.deleteSession(sid);
+      
+      req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: "Ошибка выхода" });
+        res.clearCookie("connect.sid");
+        res.status(200).json({ message: "Вы вышли из аккаунта" });
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Ошибка при удалении сессии" });
+    }
+  };
 }
