@@ -34,7 +34,7 @@ app.post("/api/users", usersController.createUser);
 app.put("/api/users/:id", usersController.updateUser);
 app.delete("/api/users/:id", usersController.deleteUser);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8081;
 
 app.listen(PORT, () => {
     console.log("Server is running");
