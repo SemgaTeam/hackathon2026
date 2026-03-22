@@ -24,11 +24,11 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await authProvider.checkAuth({});
+        await authProvider.checkAuth();
         const identity = await authProvider.getIdentity();
-        const role = await authProvider.getPermissions({});
-        setUser({ ...identity, role });
-      } catch (e) {
+        const role = await authProvider.getPermissions();
+        setUser({ id: String(identity.id), fullName: identity.fullName, role });
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);
@@ -39,7 +39,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      await authProvider.logout({});
+      await authProvider.logout();
       setUser(null);
     } catch (e) {
       console.error("Logout failed", e);

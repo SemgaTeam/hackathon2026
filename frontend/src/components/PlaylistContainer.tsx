@@ -1,9 +1,21 @@
-import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 import TrackItem from './TrackItem';
 
-export default function PlaylistContainer({ tracks, onReorder }) {
+type Track = {
+  id: string;
+  title: string;
+  duration: string;
+};
+
+type PlaylistContainerProps = {
+  tracks: Track[];
+  onReorder: (startIndex: number, endIndex: number) => void;
+  onDelete?: (id: string) => void;
+};
+
+export default function PlaylistContainer({ tracks, onReorder, onDelete }: PlaylistContainerProps) {
   
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     const { destination, source } = result;
 
     if (!destination || (destination.index === source.index)) {
@@ -29,6 +41,7 @@ export default function PlaylistContainer({ tracks, onReorder }) {
                 key={track.id} 
                 track={track} 
                 index={index} 
+                onDelete={onDelete}
               />
             ))}
             

@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 
 import defaultPreview from "../assets/default_music.jpg";
-import Chat from "./chat";
 
 export default function GlobalPlayer() {
   const location = useLocation();
@@ -18,16 +17,12 @@ export default function GlobalPlayer() {
   const [volume, setVolume] = useState(() => Number(localStorage.getItem('player-volume')) || 0.5);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   const isPlayerPage = location.pathname === "/";
 
   const initPlayer = useCallback(() => {
     const video = videoRef.current;
     if (!video || !Hls.isSupported()) return;
-
-    setError(null);
-    setIsLoaded(false);
 
     const hls = new Hls({
       enableWorker: true,

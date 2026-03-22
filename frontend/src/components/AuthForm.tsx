@@ -3,7 +3,7 @@ import { authProvider } from "../service/AuthProvider";
 import { User, Lock, Eye, EyeOff, ShieldCheck, UserPlus, LogIn, Loader2 } from "lucide-react";
 
 interface AuthFormProps {
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (user: { id: string; role: string; fullName?: string }) => void;
 }
 
 export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
@@ -42,7 +42,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
           password: formData.password 
         });
       } else {
-        await (authProvider as any).register({ 
+        await authProvider.register({ 
           username: formData.username,
           fullname: formData.fullname,
           password: formData.password 
@@ -54,10 +54,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
       }
       
       const identity = await authProvider.getIdentity();
-      const role = await authProvider.getPermissions({});
-      onLoginSuccess({ ...identity, role });
-    } catch (err: any) {
-      setError(err.message || "Ошибка доступа");
+      const role = await authProvider.getPermissions();
+      onLoginSuccess({ id: String(identity.id), fullName: identity.fullName, role });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка доступа";
+      setError(message);
     } finally {
       setLoading(false);
     }

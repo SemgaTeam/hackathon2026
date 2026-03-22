@@ -8,12 +8,9 @@ export class AuthController {
 
   public login = async (req: Request, res: Response) => {
     try {
-
       const { username, password } = req.body;
-      console.log(username, password);
       const user = await this.userRepository.getByUsername(username);
-      console.log(user);
-      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {``
+      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ error: "Неверный логин или пароль" });
       }
 
@@ -22,22 +19,19 @@ export class AuthController {
         role: user.role 
       };
 
-      console.log(req.session.user);
-      
-      await this.userRepository.saveSession(req.sessionID, req.session);
+      await this.userRepository.saveSession(req.sessionID);
       res.status(200).json({ 
         message: "Вы авторизовались", 
         user: { id: user.id, role: user.role, fullname: user.fullname } 
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Ошибка при входе" });
     }
   };
 
   public register = async (req: Request, res: Response) => {
     try {
-      const { username, password, fullname, role } = req.body;
+      const { username, password, fullname } = req.body;
 
       if (await this.userRepository.exists(username)) {
         return res.status(400).json({ error: "Пользователь уже существует" });
@@ -50,7 +44,7 @@ export class AuthController {
         id: userId,
         username,
         fullname,
-        role: role || 'user',
+        role: "user",
         password: hash,
         isDeleted: false,
         createdAt: new Date()
@@ -62,9 +56,12 @@ export class AuthController {
         id: userId.toString(), 
         role: newUser.role 
       };
-      await this.userRepository.saveSession(req.sessionID, req.session);
+      await this.userRepository.saveSession(req.sessionID);
       
-      res.status(201).json({ message: "Пользователь зарегистрирован" });
+      res.status(201).json({
+        message: "Пользователь зарегистрирован",
+        user: { id: newUser.id, role: newUser.role, fullname: newUser.fullname }
+      });
     } catch (error) {
       res.status(500).json({ error: "Ошибка регистрации" });
     }

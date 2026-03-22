@@ -14,7 +14,7 @@ export interface MediaLib {
 
 export interface PlaylistItem {
     playlist_id: UUID;
-    item_id: UUID;
+    media_item_id: UUID;
     position: number;
 }
 
@@ -78,8 +78,6 @@ export class PlaylistRepository implements PlaylistInterface {
             VALUES ($1)
             RETURNING id
         `;
-        await this.query(sql, [lib.user_id]);
-
         const { rows } = await this.query<{id: UUID}>(sql, [lib.user_id]);
         const row = rows[0]
         if (!row) {
@@ -92,7 +90,7 @@ export class PlaylistRepository implements PlaylistInterface {
     async removeFromPlaylist(playlistId: UUID, itemId: UUID): Promise<MediaItem | null> {
         const sql = `
             DELETE FROM playlist_items
-            WHERE playlist_id = $1, media_item_id = $2
+            WHERE playlist_id = $1 AND media_item_id = $2
             RETURNING *
         `;
         const { rows } = await this.query<MediaItem>(sql, [playlistId, itemId]);
@@ -276,7 +274,7 @@ export class PlaylistRepository implements PlaylistInterface {
             `
             SELECT mi.*
             FROM media_items mi
-            JOIN playlist_items pi ON pi.item_id = mi.id
+            JOIN playlist_items pi ON pi.media_item_id = mi.id
             WHERE pi.playlist_id = $1
             ORDER BY pi.position ASC
             `,
@@ -291,7 +289,7 @@ export class PlaylistRepository implements PlaylistInterface {
             `
             SELECT mi.*
             FROM media_items mi
-            JOIN playlist_items pi ON pi.item_id = mi.id
+            JOIN playlist_items pi ON pi.media_item_id = mi.id
             WHERE pi.playlist_id = $1
             ORDER BY pi.position ASC
             `,

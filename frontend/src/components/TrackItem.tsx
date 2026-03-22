@@ -1,7 +1,19 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { GripVertical, Trash2 } from 'lucide-react';
 
-export default function TrackItem({ track, index }) {
+type Track = {
+  id: string;
+  title: string;
+  duration: string;
+};
+
+type TrackItemProps = {
+  track: Track;
+  index: number;
+  onDelete?: (id: string) => void;
+};
+
+export default function TrackItem({ track, index, onDelete }: TrackItemProps) {
   return (
     <Draggable draggableId={String(track.id)} index={index}>
       {(provided, snapshot) => (
@@ -30,7 +42,11 @@ export default function TrackItem({ track, index }) {
             </div>
           </div>
 
-          <button className="p-2 text-slate-300 hover:text-[#ff4d3d] transition-colors">
+          <button
+            type="button"
+            onClick={() => onDelete?.(track.id)}
+            className="p-2 text-slate-300 hover:text-[#ff4d3d] transition-colors"
+          >
             <Trash2 size={16} />
           </button>
         </div>

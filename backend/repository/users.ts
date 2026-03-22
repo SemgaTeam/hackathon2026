@@ -57,16 +57,16 @@ export class ConcreteUserRepository implements UserRepository {
 
   async getById(id: UUID): Promise<User> {
     const { rows } = await this.query<User>(
-      "SELECT id, role, username, fullname, is_deleted, created_at FROM users WHERE id = $1",
+      'SELECT id, role, username, fullname, is_deleted AS "isDeleted", created_at AS "createdAt" FROM users WHERE id = $1',
       [id],
     );
     if (rows.length === 0) throw new Error("User not found");
-    return rows[0];
+    return rows[0]!;
   }
 
   async getAll(): Promise<User[]> {
     const { rows } = await this.query<User>(
-      "SELECT id, role, username, fullname, created_at FROM users WHERE is_deleted = false",
+      'SELECT id, role, username, fullname, is_deleted AS "isDeleted", created_at AS "createdAt" FROM users WHERE is_deleted = false',
     );
     return rows;
   }
@@ -88,17 +88,31 @@ export class ConcreteUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<void> {
-    const sql = `
-            UPDATE users 
-            SET role = $2, fullname = $3, is_deleted = $4 
-            WHERE id = $1
-        `;
-    const { rowCount } = await this.query(sql, [
+    const fields = [
+      "username = $2",
+      "role = $3",
+      "fullname = $4",
+      "is_deleted = $5",
+    ];
+    const params: any[] = [
       user.id,
+      user.username,
       user.role,
       user.fullname,
       user.isDeleted,
-    ]);
+    ];
+
+    if (user.password) {
+      fields.push(`password = $${params.length + 1}`);
+      params.push(user.password);
+    }
+
+    const sql = `
+            UPDATE users
+            SET ${fields.join(", ")}
+            WHERE id = $1
+        `;
+    const { rowCount } = await this.query(sql, params);
     if (rowCount === 0) throw new Error("Update failed: User not found");
   }
 

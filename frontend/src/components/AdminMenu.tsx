@@ -3,7 +3,13 @@ import {
     TextField, BooleanField, DateField, 
     SearchInput, useRecordContext, Create, SimpleForm, TextInput, SelectInput,
     defaultTheme,
-    Edit
+    Edit,
+    EditButton,
+    DeleteButton,
+    TopToolbar,
+    CreateButton,
+    ExportButton,
+    type LayoutProps,
 } from 'react-admin';
 import { dataProvider } from "../service/DataProvider";
 import { authProvider } from "../service/AuthProvider";
@@ -31,8 +37,9 @@ const myTheme = {
     },
 };
 
-const RoleBadge = () => {
-    const record = useRecordContext();
+const RoleBadge = ({ label }: { label?: string }) => {
+    void label;
+    const record = useRecordContext<{ role?: string }>();
     if (!record) return null;
     const isAdmin = record.role === 'admin';
     return (
@@ -109,8 +116,6 @@ const userFilters = [
     }} />
 ];
 
-import { EditButton, DeleteButton, TopToolbar, CreateButton, ExportButton } from 'react-admin';
-
 const ListActions = () => (
     <TopToolbar>
         <CreateButton variant="contained" sx={{ borderRadius: '12px', px: 3 }} />
@@ -143,7 +148,7 @@ const UserList = () => (
     </List>
 );
 
-const MyLayout = (props: any) => (
+const MyLayout = (props: LayoutProps) => (
     <Layout
         {...props}
         appBar={() => null}

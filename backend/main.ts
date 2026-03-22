@@ -21,8 +21,9 @@ import { MediaController } from "./controllers/mediaController";
 import { MessageRepository } from "./repository/messageRepository";
 
 const app = express();
-const PORT = process.env.PORT || 8081;
-const RTPMAddress = process.env.RTPMAddress || "http://localhost:1935/hsl/index.m3u8";
+const PORT = Number(process.env.PORT || 8081);
+const playbackAddress = process.env.RTMP_ADDRESS || process.env.RTPMAddress || "rtmp://localhost:1935/live/stream";
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 const userRepository = new ConcreteUserRepository(query);
 const userController = new UserController(userRepository);
@@ -30,7 +31,7 @@ const authController = new AuthController(userRepository);
 
 const queueRepository = new InMemoryQueueRepository();
 const playlistRepository = new PlaylistRepository(query);
-const playbackRepository = new PlaybackRepository(RTPMAddress);
+const playbackRepository = new PlaybackRepository(playbackAddress);
 const s3 = new S3Client({
   endpoint: process.env.S3Addr || "http://localhost:9000",
   region: "us-east-1",
@@ -58,7 +59,10 @@ const upload = multer({
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: corsOrigin,
+  credentials: true,
+}));
 
 app.use(session({
     name: "connect.sid",
@@ -82,9 +86,10 @@ declare module "express-session" {
   }
 }
 
-app.options("*", (req, res) => {
-  res.sendStatus(200);
-})
+app.options("*", cors({
+  origin: corsOrigin,
+  credentials: true,
+}));
 app.post("/api/register", authController.register);
 app.post("/api/login", authController.login);
 app.get("/api/me", checkAuth, authController.me);

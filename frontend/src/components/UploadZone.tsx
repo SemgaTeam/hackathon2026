@@ -3,11 +3,21 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileAudio, CloudLightning } from 'lucide-react';
 import { api } from '../api/instance';
 
-export default function UploadZone({ onUploadSuccess }) {
+type UploadedTrack = {
+  id: string;
+  title: string;
+  duration: string;
+  bucket?: string;
+  key?: string;
+  mimeType?: string;
+  originalName?: string;
+};
+
+export default function UploadZone({ onUploadSuccess }: { onUploadSuccess?: (track: UploadedTrack) => void }) {
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   
-  const onDrop = useCallback(async (acceptedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!acceptedFiles.length) return;
     setError(null);
     setIsUploading(true);
@@ -35,7 +45,7 @@ export default function UploadZone({ onUploadSuccess }) {
           onUploadSuccess(newTrack);
         }
       }
-    } catch (e) {
+    } catch {
       setError("Ошибка загрузки. Проверьте соединение или попробуйте позже.");
     } finally {
       setIsUploading(false);
