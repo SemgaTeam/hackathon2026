@@ -25,7 +25,7 @@ const service = new Service(queueRepository, playlistRepository);
 
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5174',
+    origin: 'http://localhost:5173',
     credentials: true,
     exposedHeaders: ['X-Total-Count']
 }));
@@ -38,7 +38,7 @@ app.use(session({
     cookie: {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: parseInt(process.env.SESSION_AT || "86400000"),
     },
 }));

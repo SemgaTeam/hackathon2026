@@ -8,25 +8,29 @@ export class AuthController {
 
   public login = async (req: Request, res: Response) => {
     try {
-      const { username, password } = req.body;
-      const user = await this.userRepository.getByUsername(username);
 
-      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+      const { username, password } = req.body;
+      console.log(username, password);
+      const user = await this.userRepository.getByUsername(username);
+      console.log(user);
+      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {``
         return res.status(401).json({ error: "Неверный логин или пароль" });
       }
 
       req.session.user = { 
         id: user.id.toString(), 
         role: user.role 
-      }; 
-      
-      await this.userRepository.saveSession(req.sessionID);
+      };
 
+      console.log(req.session.user);
+      
+      await this.userRepository.saveSession(req.sessionID, req.session);
       res.status(200).json({ 
         message: "Вы авторизовались", 
         user: { id: user.id, role: user.role, fullname: user.fullname } 
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Ошибка при входе" });
     }
   };
@@ -58,7 +62,7 @@ export class AuthController {
         id: userId.toString(), 
         role: newUser.role 
       };
-      await this.userRepository.saveSession(req.sessionID);
+      await this.userRepository.saveSession(req.sessionID, req.session);
       
       res.status(201).json({ message: "Пользователь зарегистрирован" });
     } catch (error) {

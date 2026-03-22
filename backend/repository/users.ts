@@ -1,5 +1,6 @@
 import { UUID } from "node:crypto";
 import { QueryResult, QueryResultRow } from "pg";
+import "dotenv/config";
 
 export type QueryFunction = <T extends QueryResultRow = any>(
   text: string,
