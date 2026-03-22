@@ -1,6 +1,7 @@
 import { User, UserRepository } from './../repository/users';
 import { Request, Response } from 'express';
 import { UUID, randomUUID } from "node:crypto";
+import { hashedPassword } from '../server/bcrypt';
 
 export class UserController {
     private readonly userRepository: UserRepository;
@@ -40,8 +41,8 @@ export class UserController {
                 id: randomUUID(),
                 username: req.body.username,
                 fullname: req.body.fullname,
-                role: 'user',
-                password: req.body.password,
+                role: req.body.role || "user",
+                password: await hashedPassword(req.body.password),
                 isDeleted: false,
                 createdAt: new Date()
             };

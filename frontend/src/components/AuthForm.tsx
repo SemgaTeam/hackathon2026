@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { authProvider } from "../service/AuthProvider";
+import { User, Lock, Eye, EyeOff, ShieldCheck, UserPlus, LogIn, Loader2 } from "lucide-react";
 
 interface AuthFormProps {
   onLoginSuccess: (user: any) => void;
@@ -40,68 +41,98 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
           username: formData.username, 
           password: formData.password 
         });
-        const identity = await authProvider.getIdentity();
-        const role = await authProvider.getPermissions({});
-        onLoginSuccess({ ...identity, role });
       } else {
-
-        console.log("Регистрация:", formData);
-        alert("Запрос на регистрацию отправлен (реализуйте метод в API)");
+        await (authProvider as any).register({ 
+          username: formData.username,
+          fullname: formData.fullname,
+          password: formData.password 
+        });
+        await authProvider.login({ 
+          username: formData.username, 
+          password: formData.password 
+        });
       }
+      
+      const identity = await authProvider.getIdentity();
+      const role = await authProvider.getPermissions({});
+      onLoginSuccess({ ...identity, role });
     } catch (err: any) {
-      setError(err.message || "Ошибка. Проверьте данные.");
+      setError(err.message || "Ошибка доступа");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full h-screen md:h-auto md:max-w-[400px] bg-white rounded-none md:rounded-[32px] p-8 md:p-10 shadow-none md:shadow-xl flex flex-col transition-all">
-      <div className="flex items-center justify-between w-full mb-8">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-[#0A1F33] rounded-full flex items-center justify-center text-white font-bold italic text-sm">S</div>
-          <span className="font-bold text-slate-800 tracking-tight">Semga Stream</span>
+    <div className="w-full max-w-[440px] bg-white rounded-[40px] p-10 shadow-2xl border border-white transition-all duration-500 animate-in fade-in zoom-in slide-in-from-bottom-4">
+      <div className="flex items-center justify-between w-full mb-10">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-slate-900 rounded-[18px] flex items-center justify-center text-white shadow-lg rotate-3 hover:rotate-0 transition-transform duration-300">
+            <span className="font-black italic text-xl">S</span>
+          </div>
+          <div>
+            <span className="block font-black text-slate-900 tracking-tighter text-lg leading-none">Semga Stream</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engine v2.0</span>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-[#FF4231] font-black text-lg leading-none italic">TTK.</div>
-          <div className="text-[7px] uppercase font-extrabold text-slate-400 tracking-tighter">ТрансТелеКом</div>
+        <div className="text-right opacity-60">
+          <div className="text-[#FF4231] font-black text-xl leading-none italic tracking-tighter">TTK.</div>
+          <div className="text-[8px] uppercase font-black text-slate-400 tracking-tight">ТрансТелеКом</div>
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">
-        {isLogin ? "Вход" : "Регистрация"}
-      </h2>
+      <div className="mb-8">
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+          {isLogin ? "С возвращением" : "Создать аккаунт"}
+        </h2>
+        <p className="text-slate-400 text-sm font-medium mt-1">
+          {isLogin ? "Введите данные для входа в систему" : "Заполните поля для регистрации в Semga"}
+        </p>
+      </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-500 text-[11px] font-bold rounded-xl border border-red-100 uppercase tracking-wide">
-          {error}
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-2xl flex items-center gap-3 animate-bounce">
+          <div className="text-red-500 font-bold text-[11px] uppercase tracking-wider">{error}</div>
         </div>
       )}
 
-      <form className="space-y-3" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         {!isLogin && (
-          <input
-            name="fullname"
-            type="text"
-            required
-            value={formData.fullname}
-            onChange={handleChange}
-            placeholder="Ваше ФИО"
-            className="w-full px-5 py-4 bg-[#F1F3F6] border-none rounded-2xl text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 transition-all"
-          />
+          <div className="relative group">
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF4231] transition-colors">
+              <User size={18} />
+            </div>
+            <input
+              name="fullname"
+              type="text"
+              required
+              value={formData.fullname}
+              onChange={handleChange}
+              placeholder="Ваше ФИО"
+              className="w-full pl-14 pr-5 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] text-slate-900 font-bold placeholder:text-slate-400 outline-none focus:bg-white focus:border-slate-100 focus:ring-4 focus:ring-slate-50 transition-all text-sm"
+            />
+          </div>
         )}
 
-        <input
-          name="username"
-          type="text"
-          required
-          value={formData.username}
-          onChange={handleChange}
-          placeholder="Логин"
-          className="w-full px-5 py-4 bg-[#F1F3F6] border-none rounded-2xl text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 transition-all"
-        />
+        <div className="relative group">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF4231] transition-colors">
+            <ShieldCheck size={18} />
+          </div>
+          <input
+            name="username"
+            type="text"
+            required
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Логин пользователя"
+            className="w-full pl-14 pr-5 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] text-slate-900 font-bold placeholder:text-slate-400 outline-none focus:bg-white focus:border-slate-100 focus:ring-4 focus:ring-slate-50 transition-all text-sm"
+          />
+        </div>
 
-        <div className="relative">
+        <div className="relative group">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF4231] transition-colors">
+            <Lock size={18} />
+          </div>
           <input
             name="password"
             type={showPassword ? "text" : "password"}
@@ -109,54 +140,68 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLoginSuccess }) => {
             value={formData.password}
             onChange={handleChange}
             placeholder="Пароль"
-            className="w-full px-5 py-4 bg-[#F1F3F6] border-none rounded-2xl text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 transition-all"
+            className="w-full pl-14 pr-14 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] text-slate-900 font-bold placeholder:text-slate-400 outline-none focus:bg-white focus:border-slate-100 focus:ring-4 focus:ring-slate-50 transition-all text-sm"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
           >
-            {showPassword ? "🔒" : "👁️"}
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
 
-        {/* Поле подтверждения пароля - только для регистрации */}
         {!isLogin && (
-          <input
-            name="passwordConfirm"
-            type={showPassword ? "text" : "password"}
-            required
-            value={formData.passwordConfirm}
-            onChange={handleChange}
-            placeholder="Повторите пароль"
-            className="w-full px-5 py-4 bg-[#F1F3F6] border-none rounded-2xl text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 transition-all"
-          />
+          <div className="relative animate-in slide-in-from-top-2">
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
+              <Lock size={18} />
+            </div>
+            <input
+              name="passwordConfirm"
+              type={showPassword ? "text" : "password"}
+              required
+              value={formData.passwordConfirm}
+              onChange={handleChange}
+              placeholder="Подтвердите пароль"
+              className="w-full pl-14 pr-5 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] text-slate-900 font-bold placeholder:text-slate-400 outline-none focus:bg-white focus:border-slate-100 focus:ring-4 focus:ring-slate-50 transition-all text-sm"
+            />
+          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-4 bg-[#FF4231] text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-100 mt-4 uppercase text-xs tracking-widest ${
-            loading ? "opacity-50" : "hover:bg-[#e63b2c]"
-          }`}
+          className="w-full py-5 bg-[#FF4231] text-white font-black rounded-[24px] transition-all shadow-xl shadow-red-200 mt-6 uppercase text-[11px] tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 disabled:active:scale-100 hover:shadow-red-300 hover:-translate-y-0.5"
         >
-          {loading ? "Загрузка..." : isLogin ? "Войти" : "Создать аккаунт"}
+          {loading ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <>
+              {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
+              {isLogin ? "Войти в панель" : "Создать профиль"}
+            </>
+          )}
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-slate-500 text-sm mb-1">{isLogin ? "Нет аккаунта?" : "Уже есть аккаунт?"}</p>
+      <div className="mt-10 pt-8 border-t border-slate-50 text-center">
+        <p className="text-slate-400 text-sm font-semibold mb-3">
+          {isLogin ? "Впервые у нас?" : "Уже есть профиль?"}
+        </p>
         <button
           onClick={() => { setIsLogin(!isLogin); setError(null); }}
-          className="text-[#3B82F6] font-bold text-sm hover:underline"
+          className="px-8 py-3 rounded-2xl bg-slate-50 text-slate-900 font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
         >
-          {isLogin ? "Зарегистрироваться" : "Вернуться ко входу"}
+          {isLogin ? "Регистрация" : "Ко входу"}
         </button>
       </div>
 
-      <p className="mt-10 text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em] text-center">
-        © Semga Team 2026
-      </p>
+      <div className="mt-10 flex flex-col items-center gap-2">
+        <div className="h-1 w-12 bg-slate-100 rounded-full" />
+        <p className="text-[10px] text-slate-300 font-black uppercase tracking-[0.4em]">
+          Semga Team
+        </p>
+      </div>
     </div>
   );
 }

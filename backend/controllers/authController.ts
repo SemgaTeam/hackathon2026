@@ -8,11 +8,12 @@ export class AuthController {
 
   public login = async (req: Request, res: Response) => {
     try {
+
       const { username, password } = req.body;
       console.log(username, password);
       const user = await this.userRepository.getByUsername(username);
       console.log(user);
-      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+      if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {``
         return res.status(401).json({ error: "Неверный логин или пароль" });
       }
 
