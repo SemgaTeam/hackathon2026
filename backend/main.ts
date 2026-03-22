@@ -12,6 +12,8 @@ import { InMemoryQueueRepository } from "./repository/queue";
 import { PlaylistRepository } from "./repository/playlists";
 import { Service } from "./service/service";
 import { PlaybackRepository } from "./repository/playback";
+import { StorageRepository } from "./repository/storage";
+import { S3Client } from "@aws-sdk/client-s3";
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -24,6 +26,17 @@ const authController = new AuthController(userRepository);
 const queueRepository = new InMemoryQueueRepository();
 const playlistRepository = new PlaylistRepository(query);
 const playbackRepository = new PlaybackRepository(RTPMAddress);
+const s3 = new S3Client({
+  endpoint: process.env.S3Addr || "http://localhost:9000",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.S3AccessKeyId || "",
+    secretAccessKey: process.env.S3SecretAccessKey || "",
+  },
+  forcePathStyle: true,
+});
+const storageRepository = new StorageRepository(s3, query);
+
 const service = new Service(queueRepository, playlistRepository);
 
 app.use(express.json());

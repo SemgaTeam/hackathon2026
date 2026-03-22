@@ -1,5 +1,4 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { MediaItem } from "./mediaItems";
 import { ReadStream } from "node:fs";
 import { Readable } from "node:stream";
 import { QueryResultRow, QueryResult } from "pg";
