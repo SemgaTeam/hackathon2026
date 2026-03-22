@@ -11,9 +11,11 @@ import { checkAuth, checkRole } from "./middleware/authMiddleware";
 import { InMemoryQueueRepository } from "./repository/queue";
 import { PlaylistRepository } from "./repository/playlists";
 import { Service } from "./service/service";
+import { PlaybackRepository } from "./repository/playback";
 
 const app = express();
 const PORT = process.env.PORT || 8081;
+const RTPMAddress = process.env.RTPMAddress || "http://localhost:1935/hsl/index.m3u8";
 
 const userRepository = new ConcreteUserRepository(query);
 const userController = new UserController(userRepository);
@@ -21,6 +23,7 @@ const authController = new AuthController(userRepository);
 
 const queueRepository = new InMemoryQueueRepository();
 const playlistRepository = new PlaylistRepository(query);
+const playbackRepository = new PlaybackRepository(RTPMAddress);
 const service = new Service(queueRepository, playlistRepository);
 
 app.use(express.json());
