@@ -2,12 +2,14 @@
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/express-session": "^1.18.2",
+    "@types/ws": "^8.18.1",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -25,7 +27,7 @@
   "directories": {
     "lib": "lib"
   },
-"scripts": {
+  "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only main.ts"
   },
   "keywords": [],
