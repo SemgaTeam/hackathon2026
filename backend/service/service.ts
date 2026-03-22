@@ -66,4 +66,8 @@ export class Service {
         this.playlist.removeFromPlaylist(playlistId, itemId);
         return item;
     }
+
+    async getMediaItemById(itemId: UUID): Promise<MediaItem> {
+        return await this.playlist.getMediaItemByID(itemId);
+    }
 }

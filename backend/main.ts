@@ -14,6 +14,11 @@ import { Service } from "./service/service";
 import { PlaybackRepository } from "./repository/playback";
 import { StorageRepository } from "./repository/storage";
 import { S3Client } from "@aws-sdk/client-s3";
+import multer from "multer";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { MediaController } from "./controllers/mediaController";
+import { MessageRepository } from "./repository/messageRepository";
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -40,6 +45,17 @@ const storageRepository = new StorageRepository(s3, query);
 const service = new Service(queueRepository, playlistRepository);
 const wss = new MessageRepository(query);
 
+const mediaController = new MediaController(service, storageRepository, playbackRepository);
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: "/tmp",
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `${randomUUID()}${ext}`);
+    }
+  })
+});
 
 app.use(express.json());
 app.use(cors({
@@ -80,6 +96,19 @@ app.get("/api/users/:id", checkAuth, userController.getUserById);
 app.post("/api/users", checkAuth, checkRole('admin'), userController.createUser);
 app.put("/api/users/:id", checkAuth, checkRole('admin'), userController.updateUser);
 app.delete("/api/users/:id", checkAuth, checkRole('admin'), userController.deleteUser);
+
+app.post("/api/audio", checkAuth, upload.single("file"), mediaController.uploadAudio);
+app.delete("/api/audio/:id", checkAuth, mediaController.deleteAudio);
+app.post("/api/audio/:id/play", checkAuth, mediaController.playAudio);
+
+app.post("/api/playlists", checkAuth, mediaController.createPlaylist);
+app.post("/api/playlists/:id/run", checkAuth, mediaController.runPlaylist);
+app.post("/api/playlists/:id/items", checkAuth, mediaController.addItemToPlaylist);
+app.patch("/api/playlists/:id/items/move", checkAuth, mediaController.moveItemBefore);
+app.delete("/api/playlists/:id/items/:itemId", checkAuth, mediaController.removeFromPlaylist);
+
+app.post("/api/queue/toggle-loop", checkAuth, mediaController.toggleLoop);
+app.post("/api/queue/toggle-playback", checkAuth, mediaController.togglePlayback);
 
 app.listen(PORT, () => {
     console.log(`Server is running at ${process.env.SERVER_IP}:${PORT}`);
