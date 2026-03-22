@@ -38,6 +38,7 @@ const s3 = new S3Client({
 const storageRepository = new StorageRepository(s3, query);
 
 const service = new Service(queueRepository, playlistRepository);
+const wss = new MessageRepository(query);
 
 
 app.use(express.json());

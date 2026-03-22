@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import defaultPreview from "../assets/default_music.jpg";
+import Chat from "./chat";
 
 export default function GlobalPlayer() {
   const location = useLocation();
@@ -190,7 +191,6 @@ export default function GlobalPlayer() {
           </div>
         </div>
       </div>
-
       <div className="w-full max-w-5xl grid grid-cols-3 gap-6 mt-12">
         {[
           { label: 'Audio', value: isMuted ? 'Muted (Interaction required)' : 'Live Output' },
