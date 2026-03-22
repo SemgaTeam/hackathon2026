@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Play, Pause, SkipForward, Volume2, MoreHorizontal, Radio } from 'lucide-react';
 
-export default function CurrentTrackCard({ track }) {
+type Track = {
+  id: string;
+  title: string;
+  duration: string;
+};
+
+export default function CurrentTrackCard({ track }: { track?: Track }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   if (!track) {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Shield, MessageSquare, Clock, CheckCircle2, Check } from "lucide-react";
+import { Send, Shield, MessageSquare, Clock, CheckCircle2 } from "lucide-react";
 
 type Message = {
   id: string;
@@ -60,7 +60,7 @@ export default function Chat({ currentUser }: { currentUser: { id: string, role:
     if (e) e.preventDefault();
     if (!wsRef.current || !content.trim()) return;
 
-    const payload: any = { contents: content };
+    const payload: { contents: string; to_user_id?: string } = { contents: content };
 
     if (isAdmin) {
       const lastUserMsg = [...messages].reverse().find(m => m.sender_id !== currentUser.id);

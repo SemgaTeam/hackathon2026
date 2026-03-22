@@ -4,8 +4,18 @@ import PlaylistContainer from "./PlaylistContainer";
 import UploadZone from "./UploadZone";
 import CurrentTrackCard from "./CurrentTrackCard";
 
+type Track = {
+  id: string;
+  title: string;
+  duration: string;
+  bucket?: string;
+  key?: string;
+  mimeType?: string;
+  originalName?: string;
+};
+
 export default function HostMenu() {
-  const [tracks, setTracks] = useState([
+  const [tracks, setTracks] = useState<Track[]>([
     { id: "1", title: "Эфир #102 - Intro", duration: "02:45" },
     { id: "2", title: "Интервью с разработчиком", duration: "15:20" },
     { id: "3", title: "Музыкальный блок: Lo-Fi", duration: "04:10" },
@@ -13,9 +23,12 @@ export default function HostMenu() {
     { id: "5", title: "Outro - Финал", duration: "03:15" },
   ]);
 
-  const handleReorder = (startIndex, endIndex) => {
+  const handleReorder = (startIndex: number, endIndex: number) => {
     const result = Array.from(tracks);
     const [removed] = result.splice(startIndex, 1);
+    if (!removed) {
+      return;
+    }
     result.splice(endIndex, 0, removed);
 
     setTracks(result);
@@ -23,7 +36,7 @@ export default function HostMenu() {
     // fetch('/api/playlist/reorder', { method: 'PATCH', body: JSON.stringify(result) });
   };
 
-  const handleDeleteTrack = (id) => {
+  const handleDeleteTrack = (id: string) => {
     setTracks(tracks.filter(track => track.id !== id));
   };
 
@@ -53,7 +66,7 @@ export default function HostMenu() {
 
         <div className="flex-1 flex flex-col space-y-4">
           <section className="bg-slate-50 rounded-xl p-1 border border-slate-100 shadow-sm">
-            <UploadZone onUploadSuccess={(newTrack) => setTracks([...tracks, newTrack])} />
+            <UploadZone onUploadSuccess={(newTrack) => setTracks((prev) => [...prev, newTrack])} />
           </section>
 
           <section className="sticky top-20">

@@ -3,7 +3,12 @@ import type { AuthProvider } from "react-admin";
 const apiUrl = import.meta.env.VITE_JSON_SERVER_URL;
 
 export interface CustomAuthProvider extends AuthProvider {
-    register: (params: any) => Promise<void>;
+    register: (params: { username: string; fullname: string; password: string }) => Promise<void>;
+    getIdentity: () => Promise<{ id: string; fullName: string; avatar?: string }>;
+    getPermissions: () => Promise<string>;
+    checkAuth: () => Promise<void>;
+    login: (params: { username: string; password: string }) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 export const authProvider: CustomAuthProvider = {
@@ -73,7 +78,7 @@ export const authProvider: CustomAuthProvider = {
                 fullName: data.fullname || data.username,
                 avatar: data.avatar 
             };
-        } catch (e) {
+        } catch {
             return { id: '', fullName: '' };
         }
     },

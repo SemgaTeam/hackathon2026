@@ -47,7 +47,8 @@ export class UserController {
                 createdAt: new Date()
             };
             await this.userRepository.create(newUser);
-            res.status(201).json(newUser);
+            const { password, ...safeUser } = newUser;
+            res.status(201).json(safeUser);
         } catch (error) {
             res.status(400).json({ error: "Bad Request" });
         }
@@ -55,12 +56,21 @@ export class UserController {
 
     public updateUser = async (req: Request, res: Response) => {
         try {
-            const user = {
+            const currentUser = await this.userRepository.getById(req.params.id as UUID);
+            const userBase: User = {
+                ...currentUser,
+                username: req.body.username ?? currentUser.username,
+                fullname: req.body.fullname ?? currentUser.fullname,
+                role: req.body.role ?? currentUser.role,
+                isDeleted: req.body.isDeleted ?? currentUser.isDeleted,
                 id: req.params.id as UUID,
-                ...req.body
             };
+            const user: User = req.body.password
+                ? { ...userBase, password: await hashedPassword(req.body.password) }
+                : userBase;
             await this.userRepository.update(user);
-            res.json(user);
+            const { password, ...safeUser } = user;
+            res.json(safeUser);
         } catch (error) {
             res.status(400).json({ error: "Update Failed" });
         }   

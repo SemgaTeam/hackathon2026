@@ -47,8 +47,8 @@ export class Service {
     }
 
     async addItemToPlaylist(playlistId: UUID, mediaItemId: UUID): Promise<void> {
-        this.playlist.getPlaylistByID(playlistId);
-        this.playlist.addToEnd(playlistId, mediaItemId);
+        await this.playlist.getPlaylistByID(playlistId);
+        await this.playlist.addToEnd(playlistId, mediaItemId);
     }
 
     async moveItemBefore(playlistId: UUID, itemIndex: number, beforeIndex: number): Promise<void> {
@@ -56,14 +56,14 @@ export class Service {
     }
 
     async removeFromPlaylist(playlistId: UUID, itemId: UUID): Promise<MediaItem> {
-        let item = await this.playlist.getMediaItemByID(itemId);
-        let items = await this.playlist.getPlaylistItems(playlistId);
+        const item = await this.playlist.getMediaItemByID(itemId);
+        const items = await this.playlist.getPlaylistItems(playlistId);
 
-        if (!items.includes(item)) {
+        if (!items.some(({ id }) => id === item.id)) {
             throw new Error("playlist does not contain this item");
         }
 
-        this.playlist.removeFromPlaylist(playlistId, itemId);
+        await this.playlist.removeFromPlaylist(playlistId, itemId);
         return item;
     }
 
