@@ -2,7 +2,8 @@ import {
     Admin, Resource, Layout, List, Datagrid, 
     TextField, BooleanField, DateField, 
     SearchInput, useRecordContext, Create, SimpleForm, TextInput, SelectInput,
-    defaultTheme
+    defaultTheme,
+    Edit
 } from 'react-admin';
 import { dataProvider } from "../service/DataProvider";
 import { authProvider } from "../service/AuthProvider";
@@ -66,6 +67,34 @@ const UserCreate = () => (
     </Create>
 );
 
+const UserEdit = () => (
+    <Edit title="РЕДАКТИРОВАНИЕ ПРОФИЛЯ">
+        <SimpleForm sx={{ p: 4 }}>
+            <div style={{ display: 'flex', gap: '20px' }}>
+                <TextInput source="id" disabled sx={{ flex: 1 }} />
+                <TextInput source="username" label="ЛОГИН" sx={{ flex: 2 }} />
+            </div>
+            <TextInput source="fullname" label="ФИО" fullWidth />
+            
+            <div style={{ padding: '16px', backgroundColor: '#FFF9F8', borderRadius: '16px', marginTop: '20px' }}>
+                <p style={{ margin: '0 0 10px 0', fontSize: '10px', fontWeight: '900', color: '#FF4231' }}>БЕЗОПАСНОСТЬ</p>
+                <TextInput 
+                    source="password" 
+                    label="НОВЫЙ ПАРОЛЬ (ОСТАВЬТЕ ПУСТЫМ, ЧТОБЫ НЕ МЕНЯТЬ)" 
+                    type="password" 
+                    fullWidth 
+                />
+                <SelectInput source="role" label="РОЛЬ" choices={[
+                    { id: 'user', name: 'User' },
+                    { id: 'host', name: 'Host' },
+                    { id: 'admin', name: 'Admin' },
+                ]} fullWidth />
+                <BooleanField source="isDeleted" label="ЗАБЛОКИРОВАН" />
+            </div>
+        </SimpleForm>
+    </Edit>
+);
+
 const userFilters = [
     <SearchInput source="q" alwaysOn placeholder="ПОИСК..." sx={{ 
         '& .MuiInputBase-root': { 
@@ -80,43 +109,36 @@ const userFilters = [
     }} />
 ];
 
+import { EditButton, DeleteButton, TopToolbar, CreateButton, ExportButton } from 'react-admin';
+
+const ListActions = () => (
+    <TopToolbar>
+        <CreateButton variant="contained" sx={{ borderRadius: '12px', px: 3 }} />
+        <ExportButton />
+    </TopToolbar>
+);
+
 const UserList = () => (
     <List 
+        actions={<ListActions />}
         filters={userFilters}
-        title=" "
-        sx={{
-            '& .RaList-main': { mt: 0, backgroundColor: 'transparent' },
-            '& .MuiToolbar-root': { backgroundColor: 'transparent' },
-        }}
+        sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}
     >
         <Datagrid 
             rowClick="edit"
-            bulkActionButtons={false}
             sx={{
-                backgroundColor: 'white',
-                '& .MuiTableCell-head': {
-                    color: '#94a3b8',
-                    fontSize: '10px',
-                    fontWeight: '900',
-                    textTransform: 'uppercase',
-                    borderBottom: '1px solid #F1F3F6',
-                },
-                '& .MuiTableCell-body': {
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#0A1F33',
-                    borderBottom: '1px solid #F1F3F6',
-                },
-                '& .MuiTableRow-root:hover': {
-                    backgroundColor: '#F8FAFC !important',
-                }
+                '& .MuiTableCell-root': { py: 2 },
+                '& .MuiTableRow-root': { transition: '0.2s' }
             }}
         >
             <TextField source="username" label="ЛОГИН" />
             <TextField source="fullname" label="ФИО" />
             <RoleBadge label="РОЛЬ" />
-            <BooleanField source="isDeleted" label="DEL" />
-            <DateField source="createdAt" label="ДАТА" />
+            <DateField source="createdAt" label="СОЗДАН" showTime />
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <EditButton color="primary" />
+                <DeleteButton mutationMode="pessimistic" />
+            </div>
         </Datagrid>
     </List>
 );
@@ -148,9 +170,10 @@ export default function AdminMenu() {
         >
             <Resource
                 name="users"
-                options={{ label: 'ПОЛЬЗОВАТЕЛИ' }}
+                options={{ label: 'Управление доступом' }}
                 list={UserList}
                 create={UserCreate}
+                edit={UserEdit}
             />
         </Admin>
     );
