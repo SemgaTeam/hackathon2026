@@ -10,7 +10,7 @@ import defaultPreview from "../assets/default_music.jpg";
 export default function GlobalPlayer() {
   const location = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null); // Для автофокуса
+  const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   
   const [isMuted, setIsMuted] = useState(false);
