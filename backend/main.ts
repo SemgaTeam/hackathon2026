@@ -58,11 +58,7 @@ const upload = multer({
 });
 
 app.use(express.json());
-app.use(cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-    exposedHeaders: ['X-Total-Count']
-}));
+app.use(cors());
 
 app.use(session({
     name: "connect.sid",
@@ -86,6 +82,9 @@ declare module "express-session" {
   }
 }
 
+app.options("*", (req, res) => {
+  res.sendStatus(200);
+})
 app.post("/api/register", authController.register);
 app.post("/api/login", authController.login);
 app.get("/api/me", checkAuth, authController.me);
@@ -110,6 +109,6 @@ app.delete("/api/playlists/:id/items/:itemId", checkAuth, mediaController.remove
 app.post("/api/queue/toggle-loop", checkAuth, mediaController.toggleLoop);
 app.post("/api/queue/toggle-playback", checkAuth, mediaController.togglePlayback);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running at ${process.env.SERVER_IP}:${PORT}`);
 });
