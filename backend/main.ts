@@ -39,9 +39,10 @@ const storageRepository = new StorageRepository(s3, query);
 
 const service = new Service(queueRepository, playlistRepository);
 
+
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
     exposedHeaders: ['X-Total-Count']
 }));
@@ -80,5 +81,5 @@ app.put("/api/users/:id", checkAuth, checkRole('admin'), userController.updateUs
 app.delete("/api/users/:id", checkAuth, checkRole('admin'), userController.deleteUser);
 
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+    console.log(`Server is running at ${process.env.SERVER_IP}:${PORT}`);
 });
