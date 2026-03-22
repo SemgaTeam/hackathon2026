@@ -35,7 +35,7 @@ export default function GlobalPlayer() {
     });
 
     hlsRef.current = hls;
-    hls.loadSource("http://10.165.4.144:8080/hls/stream/index.m3u8");
+    hls.loadSource("http://194.113.106.86:8080/hls/stream/index.m3u8");
     hls.attachMedia(video);
 
     hls.on(Hls.Events.MANIFEST_PARSED, () => {

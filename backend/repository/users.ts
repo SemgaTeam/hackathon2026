@@ -131,9 +131,11 @@ export class ConcreteUserRepository implements UserRepository {
     }
 
     async deleteById(id: UUID): Promise<void> {
+        console.log("Delete user by id started for: ", id);
         const sql = `UPDATE users SET is_deleted = true WHERE id = $1`;
         const { rowCount } = await this.query(sql, [id]);
         if (rowCount === 0) throw new Error("Delete failed: User not found");
+        console.log("delete user by id (soft delete completed");
     }
 
     async saveSession(sid: string, data: any): Promise<void> {
