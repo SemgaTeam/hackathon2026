@@ -62,7 +62,6 @@ export default function Chat({ currentUser }: { currentUser: { id: string, role:
 
     const payload: any = { contents: content };
 
-    // Если админ — отвечаем последнему пользователю в чате
     if (isAdmin) {
       const lastUserMsg = [...messages].reverse().find(m => m.sender_id !== currentUser.id);
       if (lastUserMsg) payload.to_user_id = lastUserMsg.sender_id;
